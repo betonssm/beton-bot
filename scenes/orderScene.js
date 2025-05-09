@@ -72,7 +72,7 @@ async (ctx) => {
   if (text === 'Помощь в расчёте') {
     await ctx.reply('✏️ Введите длину опалубки в метрах:');
     ctx.wizard.state.volumeCalc = {};
-    return ctx.wizard.selectStep(15); // Переход в кастомную подсцену
+    return ctx.wizard.selectStep(14); // Переход в кастомную подсцену
   }
 
   const volume = parseFloat(text.replace(',', '.'));
