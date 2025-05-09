@@ -109,6 +109,7 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 // 10. Подача и насос
+// 10. Подача и насос
 async (ctx) => {
   const method = ctx.message.text;
   if (!['Самослив', 'Автобетононасос'].includes(method)) {
@@ -124,7 +125,8 @@ async (ctx) => {
     return ctx.wizard.next(); // → шаг 11
   } else {
     ctx.wizard.state.data.pumpLength = 'Не требуется';
-    return ctx.wizard.next(); // ПРАВИЛЬНО: следующий шаг — тип клиента
+    await ctx.reply('Вы физлицо или юрлицо?', Markup.keyboard(['Физлицо', 'Юрлицо']).oneTime().resize());
+    return ctx.wizard.next(); // → шаг 11
   }
 },
   // 11. Тип клиента
