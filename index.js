@@ -1,40 +1,33 @@
-require('dotenv').config();
+const express = require('express');
 const { Telegraf, Scenes, session } = require('telegraf');
-const mongoose = require('mongoose');
-const orderScene = require('./scenes/orderScene');
+require('dotenv').config();
 
-// Инициализируем бота
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Подключение к MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB подключена'))
-  .catch(err => console.error('❌ Ошибка MongoDB:', err));
-
-// Настройка сцен
+// 👉 Подключаем сцену
+const orderScene = require('./scenes/orderScene');
 const stage = new Scenes.Stage([orderScene]);
 bot.use(session());
 bot.use(stage.middleware());
 
-// Команда /start
-bot.start((ctx) => {
-  ctx.reply('👋 Добро пожаловать! Чтобы оставить заявку на бетон, напишите /zayavka');
-});
-
-// Команда на запуск заявки
+// Команды
+bot.start((ctx) => ctx.reply('👋 Добро пожаловать! Чтобы оставить заявку на бетон, напишите /zayavka'));
 bot.command('zayavka', (ctx) => ctx.scene.enter('order-wizard'));
 
-/// Заменяем стандартный bot.launch на асинхронную обёртку
+// 💡 Express-сервер
+const app = express();
+app.use(express.json());
+app.use(bot.webhookCallback('/webhook'));
+
+// 🚀 Установка Webhook
 (async () => {
-  try {
-    await bot.telegram.deleteWebhook(); // 💣 Удаляем старый webhook
-    await bot.launch(); // 🚀 Запускаем через polling
-    console.log('🤖 Бот запущен через polling');
-  } catch (err) {
-    console.error('❌ Ошибка запуска бота:', err);
-  }
+  const url = process.env.WEBHOOK_URL; // Пример: https://beton-bot.onrender.com
+  await bot.telegram.setWebhook(`${url}/webhook`);
+  console.log('✅ Webhook установлен:', `${url}/webhook`);
 })();
 
-// Для корректного завершения
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// 🌐 Старт Express-сервера
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер слушает порт ${PORT}`);
+});
