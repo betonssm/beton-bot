@@ -110,19 +110,23 @@ const orderScene = new Scenes.WizardScene(
   },
 
   // 10. Подача и насос
-  async (ctx) => {
-    const method = ctx.message.text;
-    if (!['Самослив', 'Автобетононасос'].includes(method)) return ctx.reply('Выберите способ подачи.');
-    ctx.wizard.state.data.deliveryMethod = method;
-    if (method === 'Автобетононасос') {
-      await ctx.reply('Укажите длину стрелы:', Markup.keyboard(['22м', '24м', '28м', '32м', '36м', '40м', '52м']).oneTime().resize());
-      return ctx.wizard.next();
-    }
-    ctx.wizard.state.data.pumpLength = 'Не требуется';
-    return ctx.wizard.next();
-  },
+async (ctx) => {
+  const method = ctx.message.text;
+  if (!['Самослив', 'Автобетононасос'].includes(method)) return ctx.reply('Выберите способ подачи.');
+  ctx.wizard.state.data.deliveryMethod = method;
 
-  // 11. Тип клиента
+  if (method === 'Автобетононасос') {
+    await ctx.reply('Укажите длину стрелы:', Markup.keyboard(['22м', '24м', '28м', '32м', '36м', '40м', '52м']).oneTime().resize());
+    return ctx.wizard.next(); // переходим к шагу 11
+  }
+
+  // 👉 Самослив
+  ctx.wizard.state.data.pumpLength = 'Не требуется';
+  await ctx.reply('Вы физлицо или юрлицо?', Markup.keyboard(['Физлицо', 'Юрлицо']).oneTime().resize());
+  return ctx.wizard.selectStep(12); // ⬅️ Пропускаем шаг 11
+},
+
+  // 11. Длина стрелы
   async (ctx) => {
     ctx.wizard.state.data.pumpLength = ctx.message.text;
     await ctx.reply('Вы физлицо или юрлицо?', Markup.keyboard(['Физлицо', 'Юрлицо']).oneTime().resize());
