@@ -24,10 +24,16 @@ bot.start((ctx) => {
 // Команда на запуск заявки
 bot.command('zayavka', (ctx) => ctx.scene.enter('order-wizard'));
 
-// Запуск бота
-bot.launch().then(() => {
-  console.log('🤖 Бот запущен');
-});
+/// Заменяем стандартный bot.launch на асинхронную обёртку
+(async () => {
+  try {
+    await bot.telegram.deleteWebhook(); // 💣 Удаляем старый webhook
+    await bot.launch(); // 🚀 Запускаем через polling
+    console.log('🤖 Бот запущен через polling');
+  } catch (err) {
+    console.error('❌ Ошибка запуска бота:', err);
+  }
+})();
 
 // Для корректного завершения
 process.once('SIGINT', () => bot.stop('SIGINT'));
