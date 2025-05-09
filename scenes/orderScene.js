@@ -110,6 +110,7 @@ const orderScene = new Scenes.WizardScene(
   },
 
   // 10. Подача и насос
+// 10. Подача и насос
 async (ctx) => {
   const method = ctx.message.text;
   if (!['Самослив', 'Автобетононасос'].includes(method)) {
@@ -122,10 +123,10 @@ async (ctx) => {
     await ctx.reply('Укажите длину стрелы:', Markup.keyboard([
       '22м', '24м', '28м', '32м', '36м', '40м', '52м'
     ]).oneTime().resize());
-    return ctx.wizard.next(); // → шаг 11 (ввод длины стрелы)
+    return ctx.wizard.next(); // → шаг 11
   } else {
     ctx.wizard.state.data.pumpLength = 'Не требуется';
-    return ctx.wizard.selectStep(12); // → шаг 12 (физлицо/юрлицо)
+    return ctx.wizard.selectStep(11); // ПРАВИЛЬНО: следующий шаг — тип клиента
   }
 },
 
