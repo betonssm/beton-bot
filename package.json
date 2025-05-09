@@ -1,0 +1,14 @@
+{
+  "name": "beton-bot",
+  "version": "1.0.0",
+  "description": "Telegram-бот для приёма заявок на бетон",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "mongoose": "^8.14.1",
+    "telegraf": "^4.16.3"
+  }
+}
