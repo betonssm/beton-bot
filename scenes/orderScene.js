@@ -59,19 +59,31 @@ const orderScene = new Scenes.WizardScene(
   // 5. Марка
   async (ctx) => {
     ctx.wizard.state.data.materialGrade = ctx.message.text;
-    await ctx.reply('Укажите объём в м³:');
+    await ctx.reply('Укажите объём в м³:', Markup.keyboard([
+      ['Помощь в расчёте']
+    ]).oneTime().resize());
     return ctx.wizard.next();
   },
 
-  // 6. Объём
-  async (ctx) => {
-    const volume = parseFloat(ctx.message.text.replace(',', '.'));
-    if (isNaN(volume)) return ctx.reply('Введите числовое значение объёма.');
-    ctx.wizard.state.data.volume = volume;
+ // 6. Объём
+async (ctx) => {
+  const text = ctx.message.text;
 
-    await ctx.reply('Укажите адрес доставки:');
-    return ctx.wizard.next();
-  },
+  if (text === 'Помощь в расчёте') {
+    await ctx.reply('✏️ Введите длину опалубки в метрах:');
+    ctx.wizard.state.volumeCalc = {};
+    return ctx.wizard.selectStep(60); // Переход в кастомную подсцену
+  }
+
+  const volume = parseFloat(text.replace(',', '.'));
+  if (isNaN(volume)) {
+    return ctx.reply('❗ Введите числовое значение объёма или нажмите "Помощь в расчёте".');
+  }
+
+  ctx.wizard.state.data.volume = volume;
+  await ctx.reply('Укажите адрес доставки:');
+  return ctx.wizard.next();
+},
 
   // 7. Адрес
   async (ctx) => {
@@ -140,18 +152,88 @@ async (ctx) => {
   await ctx.reply('Добавьте комментарий (если есть) или напишите "нет":');
   return ctx.wizard.next();
 },
+// 60. Ввод длины
+async (ctx) => {
+  const length = parseFloat(ctx.message.text.replace(',', '.'));
+  if (isNaN(length)) return ctx.reply('❗ Введите число (длину в метрах)');
+  ctx.wizard.state.volumeCalc.length = length;
+  await ctx.reply('Теперь введите ширину опалубки в метрах:');
+  return ctx.wizard.selectStep(61);
+},
 
-  // 14. Комментарий и сохранение
-  async (ctx) => {
-    ctx.wizard.state.data.comment = ctx.message.text;
+// 61. Ввод ширины
+async (ctx) => {
+  const width = parseFloat(ctx.message.text.replace(',', '.'));
+  if (isNaN(width)) return ctx.reply('❗ Введите число (ширину в метрах)');
+  ctx.wizard.state.volumeCalc.width = width;
+  await ctx.reply('Теперь введите высоту (или глубину) опалубки в метрах:');
+  return ctx.wizard.selectStep(62);
+},
 
-    // Сохраняем заявку в MongoDB
-    await Order.create(ctx.wizard.state.data);
+// 62. Ввод высоты и расчёт
+async (ctx) => {
+  const height = parseFloat(ctx.message.text.replace(',', '.'));
+  if (isNaN(height)) return ctx.reply('❗ Введите число (высоту в метрах)');
 
-    await ctx.reply('✅ Спасибо! Ваша заявка принята. Мы свяжемся с вами в ближайшее время.');
+  const { length, width } = ctx.wizard.state.volumeCalc;
+  const volume = +(length * width * height).toFixed(2);
+  ctx.wizard.state.data.volume = volume;
 
-    return ctx.scene.leave();
+  await ctx.reply(`📐 Расчётный объём: *${volume} м³*`, {
+    parse_mode: 'Markdown'
+  });
+
+  await ctx.reply('Использовать этот объём?', Markup.keyboard([
+    ['✅ Да', '❌ Нет, ввести вручную']
+  ]).oneTime().resize());
+
+  return ctx.wizard.selectStep(63);
+},
+// 63. Подтверждение объёма
+async (ctx) => {
+  const answer = ctx.message.text;
+
+  if (answer === '✅ Да') {
+    await ctx.reply('Укажите адрес доставки:');
+    return ctx.wizard.selectStep(7); // Переход к следующему шагу
   }
-);
 
+  if (answer === '❌ Нет, ввести вручную') {
+    await ctx.reply('Хорошо, введите объём в м³:', Markup.removeKeyboard());
+    return ctx.wizard.selectStep(6); // Возврат к ручному вводу
+  }
+
+  return ctx.reply('Пожалуйста, выберите "✅ Да" или "❌ Нет, ввести вручную".');
+},
+  // 14. Комментарий и сохранение
+async (ctx) => {
+  ctx.wizard.state.data.comment = ctx.message.text;
+
+  // Сохраняем заявку в MongoDB
+  await Order.create(ctx.wizard.state.data);
+
+  await ctx.reply('✅ Спасибо! Ваша заявка принята. Мы свяжемся с вами в ближайшее время.');
+
+  // Отправка уведомления тебе (менеджеру)
+  const adminId = 7811172186;
+  const data = ctx.wizard.state.data;
+
+  await ctx.telegram.sendMessage(adminId, 
+    `📬 *Новая заявка:*\n\n` +
+    `🏙 *Город:* ${data.city}\n` +
+    `🧱 *Тип:* ${data.productType} (${data.fillerType})\n` +
+    `🏷 *Марка:* ${data.materialGrade}\n` +
+    `📦 *Объём:* ${data.volume} м³\n` +
+    `📍 *Адрес:* ${data.deliveryAddress}\n` +
+    `🕒 *Дата/время:* ${data.deliveryDateTime}\n` +
+    `🚚 *Подача:* ${data.deliveryMethod} (${data.pumpLength})\n` +
+    `👤 *Клиент:* ${data.customerType}, ${data.phoneNumber}\n` +
+    `🧾 *Оплата:* ${data.paymentMethod}\n` +
+    `💬 *Комментарий:* ${data.comment || '—'}`,
+    { parse_mode: 'Markdown' }
+  );
+
+  return ctx.scene.leave();
+},
+)
 module.exports = orderScene;
