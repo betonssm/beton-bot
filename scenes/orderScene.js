@@ -34,7 +34,7 @@ const orderScene = new Scenes.WizardScene(
     }
 
     const city = ctx.wizard.state.data.city;
-    if (city === 'Москва') {
+    if (city === 'Москва+обл.') {
       await ctx.reply('Выберите тип наполнителя:', Markup.keyboard(['Гранит', 'Гравий']).oneTime().resize());
     } else {
       ctx.wizard.state.data.fillerType = 'Гранит';
