@@ -72,7 +72,7 @@ async (ctx) => {
   if (text === 'Помощь в расчёте') {
     await ctx.reply('✏️ Введите длину опалубки в метрах:');
     ctx.wizard.state.volumeCalc = {};
-    return ctx.wizard.selectStep(60); // Переход в кастомную подсцену
+    return ctx.wizard.selectStep(15); // Переход в кастомную подсцену
   }
 
   const volume = parseFloat(text.replace(',', '.'));
@@ -195,7 +195,7 @@ async (ctx) => {
   if (isNaN(length)) return ctx.reply('❗ Введите число (длину в метрах)');
   ctx.wizard.state.volumeCalc.length = length;
   await ctx.reply('Теперь введите ширину опалубки в метрах:');
-  return ctx.wizard.selectStep(61);
+  return ctx.wizard.selectStep(16);
 },
 
 // 61. Ввод ширины
@@ -204,7 +204,7 @@ async (ctx) => {
   if (isNaN(width)) return ctx.reply('❗ Введите число (ширину в метрах)');
   ctx.wizard.state.volumeCalc.width = width;
   await ctx.reply('Теперь введите высоту (или глубину) опалубки в метрах:');
-  return ctx.wizard.selectStep(62);
+  return ctx.wizard.selectStep(17);
 },
 
 // 62. Ввод высоты и расчёт
@@ -224,7 +224,7 @@ async (ctx) => {
     ['✅ Да', '❌ Нет, ввести вручную']
   ]).oneTime().resize());
 
-  return ctx.wizard.selectStep(63);
+  return ctx.wizard.selectStep(18);
 },
 // 63. Подтверждение объёма
 async (ctx) => {
