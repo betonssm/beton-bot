@@ -125,11 +125,21 @@ const orderScene = new Scenes.WizardScene(
   },
 
   // 13. Телефон
-  async (ctx) => {
-    ctx.wizard.state.data.phoneNumber = ctx.message.text;
-    await ctx.reply('Добавьте комментарий (если есть) или напишите "нет":');
-    return ctx.wizard.next();
-  },
+async (ctx) => {
+  const phone = ctx.message.text.trim();
+
+  // Простой шаблон для проверки российских номеров
+  const phoneRegex = /^(\+7|8)?[\s-]?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
+
+  if (!phoneRegex.test(phone)) {
+    await ctx.reply('❗ Пожалуйста, введите корректный номер телефона. Пример: +7 999 123-45-67');
+    return;
+  }
+
+  ctx.wizard.state.data.phoneNumber = phone;
+  await ctx.reply('Добавьте комментарий (если есть) или напишите "нет":');
+  return ctx.wizard.next();
+},
 
   // 14. Комментарий и сохранение
   async (ctx) => {
