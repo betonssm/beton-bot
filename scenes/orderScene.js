@@ -189,28 +189,29 @@ async (ctx) => {
   await ctx.reply('Добавьте комментарий (если есть) или напишите "нет":');
   return ctx.wizard.next();
 },
-// 60. Ввод длины
+// 14. Ввод длины
 async (ctx) => {
   const length = parseFloat(ctx.message.text.replace(',', '.'));
   if (isNaN(length)) return ctx.reply('❗ Введите число (длину в метрах)');
   ctx.wizard.state.volumeCalc.length = length;
   await ctx.reply('Теперь введите ширину опалубки в метрах:');
-  return ctx.wizard.selectStep(16);
+  return ctx.wizard.selectStep(15);
 },
 
-// 61. Ввод ширины
+// 15. Ввод ширины
 async (ctx) => {
   const width = parseFloat(ctx.message.text.replace(',', '.'));
   if (isNaN(width)) return ctx.reply('❗ Введите число (ширину в метрах)');
   ctx.wizard.state.volumeCalc.width = width;
   await ctx.reply('Теперь введите высоту (или глубину) опалубки в метрах:');
-  return ctx.wizard.selectStep(17);
+  return ctx.wizard.selectStep(16);
 },
 
-// 62. Ввод высоты и расчёт
+// 16. Ввод высоты и расчёт
 async (ctx) => {
   const height = parseFloat(ctx.message.text.replace(',', '.'));
   if (isNaN(height)) return ctx.reply('❗ Введите число (высоту в метрах)');
+  ctx.wizard.state.volumeCalc.height = height;
 
   const { length, width } = ctx.wizard.state.volumeCalc;
   const volume = +(length * width * height).toFixed(2);
@@ -224,20 +225,23 @@ async (ctx) => {
     ['✅ Да', '❌ Нет, ввести вручную']
   ]).oneTime().resize());
 
-  return ctx.wizard.selectStep(18);
+  return ctx.wizard.selectStep(17);
 },
-// 63. Подтверждение объёма
+
+// 17. Подтверждение объёма
 async (ctx) => {
   const answer = ctx.message.text;
 
   if (answer === '✅ Да') {
-    await ctx.reply('Укажите адрес доставки:');
-    return ctx.wizard.selectStep(7); // Переход к следующему шагу
+    await ctx.reply('📍 Как хотите указать адрес?', Markup.keyboard([
+      ['Ввести вручную', 'Отправить геолокацию']
+    ]).oneTime().resize());
+    return ctx.wizard.selectStep(6); // Переход к выбору адреса
   }
 
   if (answer === '❌ Нет, ввести вручную') {
     await ctx.reply('Хорошо, введите объём в м³:', Markup.removeKeyboard());
-    return ctx.wizard.selectStep(6); // Возврат к ручному вводу
+    return ctx.wizard.selectStep(5); // Возврат к ручному вводу объёма
   }
 
   return ctx.reply('Пожалуйста, выберите "✅ Да" или "❌ Нет, ввести вручную".');
