@@ -7,14 +7,14 @@ const orderScene = new Scenes.WizardScene(
   // 1. Город
   async (ctx) => {
     ctx.wizard.state.data = {};
-    await ctx.reply('Выберите город доставки:', Markup.keyboard(['Москва', 'Санкт-Петербург']).oneTime().resize());
+    await ctx.reply('Выберите город доставки:', Markup.keyboard(['Москва+обл.', 'Санкт-Петербург+обл.']).oneTime().resize());
     return ctx.wizard.next();
   },
 
   // 2. Тип продукта
   async (ctx) => {
     const city = ctx.message.text;
-    if (!['Москва', 'Санкт-Петербург'].includes(city)) return ctx.reply('Пожалуйста, выберите город из списка.');
+    if (!['Москва+обл.', 'Санкт-Петербург+обл.'].includes(city)) return ctx.reply('Пожалуйста, выберите город из списка.');
     ctx.wizard.state.data.city = city;
 
     await ctx.reply('Что требуется?', Markup.keyboard(['Бетон', 'Раствор']).oneTime().resize());
