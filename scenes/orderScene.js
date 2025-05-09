@@ -63,7 +63,7 @@ const orderScene = new Scenes.WizardScene(
     if (text === 'Помощь в расчёте') {
       await ctx.reply('✏️ Введите длину опалубки в метрах:');
       ctx.wizard.state.volumeCalc = {};
-      return ctx.wizard.selectStep(16);
+      return ctx.wizard.selectStep(15);
     }
     const volume = parseFloat(text.replace(',', '.'));
     if (isNaN(volume)) return ctx.reply('❗ Введите числовое значение объёма или нажмите "Помощь в расчёте".');
@@ -108,8 +108,6 @@ const orderScene = new Scenes.WizardScene(
     await ctx.reply('Способ подачи:', Markup.keyboard(['Самослив', 'Автобетононасос']).oneTime().resize());
     return ctx.wizard.next();
   },
-
-  // 10. Подача и насос
 // 10. Подача и насос
 async (ctx) => {
   const method = ctx.message.text;
@@ -126,32 +124,24 @@ async (ctx) => {
     return ctx.wizard.next(); // → шаг 11
   } else {
     ctx.wizard.state.data.pumpLength = 'Не требуется';
-    return ctx.wizard.selectStep(11); // ПРАВИЛЬНО: следующий шаг — тип клиента
+    return ctx.wizard.next(); // ПРАВИЛЬНО: следующий шаг — тип клиента
   }
 },
-
-  // 11. Длина стрелы
-  async (ctx) => {
-    ctx.wizard.state.data.pumpLength = ctx.message.text;
-    await ctx.reply('Вы физлицо или юрлицо?', Markup.keyboard(['Физлицо', 'Юрлицо']).oneTime().resize());
-    return ctx.wizard.next();
-  },
-
-  // 12. Тип клиента
+  // 11. Тип клиента
   async (ctx) => {
     ctx.wizard.state.data.customerType = ctx.message.text;
     await ctx.reply('Способ оплаты:', Markup.keyboard(['Наличный расчёт', 'Безналичный расчёт']).oneTime().resize());
     return ctx.wizard.next();
   },
 
-  // 13. Оплата
+  // 12. Оплата
   async (ctx) => {
     ctx.wizard.state.data.paymentMethod = ctx.message.text;
     await ctx.reply('Введите контактный телефон:');
     return ctx.wizard.next();
   },
 
-  // 14. Телефон
+  // 13. Телефон
   async (ctx) => {
     const phone = ctx.message.text.trim();
     const phoneRegex = /^(\+7|8)?[\s-]?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
@@ -164,7 +154,7 @@ async (ctx) => {
     return ctx.wizard.next();
   },
 
-  // 15. Комментарий и сохранение
+  // 14. Комментарий и сохранение
   async (ctx) => {
     ctx.wizard.state.data.comment = ctx.message.text;
     ctx.wizard.state.data.telegramId = ctx.from.id;
@@ -190,25 +180,25 @@ async (ctx) => {
     return ctx.scene.leave();
   },
 
-  // 16. Ввод длины
+  // 15. Ввод длины
   async (ctx) => {
     const length = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(length)) return ctx.reply('❗ Введите число (длину в метрах)');
     ctx.wizard.state.volumeCalc.length = length;
     await ctx.reply('Теперь введите ширину:');
-    return ctx.wizard.selectStep(17);
+    return ctx.wizard.selectStep(16);
   },
 
-  // 17. Ввод ширины
+  // 16. Ввод ширины
   async (ctx) => {
     const width = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(width)) return ctx.reply('❗ Введите число (ширину в метрах)');
     ctx.wizard.state.volumeCalc.width = width;
     await ctx.reply('Теперь введите высоту:');
-    return ctx.wizard.selectStep(18);
+    return ctx.wizard.selectStep(17);
   },
 
-  // 18. Ввод высоты и расчёт
+  // 17 Ввод высоты и расчёт
   async (ctx) => {
     const height = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(height)) return ctx.reply('❗ Введите число (высоту в метрах)');
@@ -217,10 +207,10 @@ async (ctx) => {
     ctx.wizard.state.data.volume = volume;
     await ctx.reply(`📐 Расчётный объём: *${volume} м³*`, { parse_mode: 'Markdown' });
     await ctx.reply('Использовать этот объём?', Markup.keyboard([['✅ Да', '❌ Нет, ввести вручную']]).oneTime().resize());
-    return ctx.wizard.selectStep(19);
+    return ctx.wizard.selectStep(18);
   },
 
-  // 19. Подтверждение расчёта
+  // 18. Подтверждение расчёта
   async (ctx) => {
     const answer = ctx.message.text;
     if (answer === '✅ Да') {
