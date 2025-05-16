@@ -3,6 +3,7 @@ const { Telegraf, Scenes, session } = require('telegraf');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+
 // Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -14,6 +15,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+bot.on('message', (msg) => {
+  console.log('=== Новое сообщение! ===');
+  console.log('msg.chat:', msg.chat);
+});
 
 // 👉 Подключаем сцену
 const orderScene = require('./scenes/orderScene');
@@ -24,9 +29,6 @@ bot.use(stage.middleware());
 // Команды
 bot.start((ctx) => ctx.reply('👋 Добро пожаловать! Чтобы оставить заявку на бетон, напишите /zayavka'));
 bot.command('zayavka', (ctx) => ctx.scene.enter('order-wizard'));
-bot.on('message', (msg) => {
-  console.log('MSG CHAT:', msg.chat);
-});
 // 💡 Express-сервер
 const app = express();
 app.use(express.json());
