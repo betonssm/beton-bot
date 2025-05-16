@@ -15,10 +15,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-bot.on('message', (msg) => {
-  console.log('=== Новое сообщение! ===');
-  console.log('msg.chat:', msg.chat);
-});
 
 // 👉 Подключаем сцену
 const orderScene = require('./scenes/orderScene');
