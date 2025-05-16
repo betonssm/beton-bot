@@ -141,7 +141,7 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // 13. Способ оплаты  <--- ДОБАВЛЕН!
+  // 13. Способ оплаты
   async (ctx) => {
     const payment = ctx.message.text;
     if (!['Наличный расчёт', 'Безналичный расчёт'].includes(payment)) {
@@ -163,7 +163,7 @@ const orderScene = new Scenes.WizardScene(
     ctx.wizard.state.data.phoneNumber = phone;
     await ctx.reply('Добавьте комментарий или напишите "нет":');
     return ctx.wizard.next();
-},
+  },
 
   // 15. Сохранение заявки (после комментария)
   async (ctx) => {
@@ -188,7 +188,7 @@ const orderScene = new Scenes.WizardScene(
     return ctx.scene.leave();
   },
 
-  // 16–19. Расчёт объёма (длина-ширина-высота)
+  // 16. Длина (расчёт)
   async (ctx) => {
     const length = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(length)) return ctx.reply('Введите длину в метрах.');
@@ -196,6 +196,8 @@ const orderScene = new Scenes.WizardScene(
     await ctx.reply('Теперь введите ширину:');
     return ctx.wizard.next();
   },
+
+  // 17. Ширина (расчёт)
   async (ctx) => {
     const width = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(width)) return ctx.reply('Введите ширину в метрах.');
@@ -203,6 +205,8 @@ const orderScene = new Scenes.WizardScene(
     await ctx.reply('Теперь введите высоту:');
     return ctx.wizard.next();
   },
+
+  // 18. Высота (расчёт)
   async (ctx) => {
     const height = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(height)) return ctx.reply('Введите высоту в метрах.');
@@ -213,6 +217,8 @@ const orderScene = new Scenes.WizardScene(
     await ctx.reply('Использовать этот объём?', Markup.keyboard([['✅ Да', '❌ Нет, ввести вручную']]).oneTime().resize());
     return ctx.wizard.next();
   },
+
+  // 19. Подтверждение расчёта или ручной ввод
   async (ctx) => {
     const answer = ctx.message.text;
     if (answer === '✅ Да') {
@@ -228,4 +234,5 @@ const orderScene = new Scenes.WizardScene(
 );
 
 module.exports = orderScene;
+
 
