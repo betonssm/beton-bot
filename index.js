@@ -24,7 +24,9 @@ bot.use(stage.middleware());
 // Команды
 bot.start((ctx) => ctx.reply('👋 Добро пожаловать! Чтобы оставить заявку на бетон, напишите /zayavka'));
 bot.command('zayavka', (ctx) => ctx.scene.enter('order-wizard'));
-
+bot.on('message', (msg) => {
+  console.log('MSG CHAT:', msg.chat);
+});
 // 💡 Express-сервер
 const app = express();
 app.use(express.json());
