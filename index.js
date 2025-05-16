@@ -82,6 +82,35 @@ bot.on('text', async (ctx, next) => {
     return next();
   }
 });
+bot.hears('🤖 Получить консультацию ИИ', (ctx) => {
+  ctx.session.waitingAiQuestion = true;
+  ctx.reply(
+    '💬 Напишите ваш вопрос по бетону или строительству:',
+    {
+      reply_markup: {
+        keyboard: [['⬅️ Назад']],
+        resize_keyboard: true,
+        one_time_keyboard: false,
+      }
+    }
+  );
+});
+bot.hears('⬅️ Назад', (ctx) => {
+  ctx.session.waitingAiQuestion = false;
+  ctx.reply(
+    '👋 Выберите действие:',
+    {
+      reply_markup: {
+        keyboard: [
+          ['📝 Оставить заявку'],
+          ['🤖 Получить консультацию ИИ']
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false,
+      }
+    }
+  );
+});
 // 💡 Express-сервер
 const app = express();
 app.use(express.json());
