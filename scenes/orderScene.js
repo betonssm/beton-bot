@@ -20,26 +20,30 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // 2. Наполнитель
+  // 2. Наполнитель (или переход сразу к марке/объёму)
   async (ctx) => {
     const type = ctx.message.text;
     if (!['Бетон', 'Раствор'].includes(type)) return ctx.reply('Пожалуйста, выберите из вариантов.');
     ctx.wizard.state.data.productType = type;
+
     if (type === 'Раствор') {
       ctx.wizard.state.data.fillerType = 'Нет';
-      return ctx.wizard.selectStep(3);
+      await ctx.reply('Введите марку материала (например, М100):');
+      return ctx.wizard.selectStep(4);
     }
+
     const city = ctx.wizard.state.data.city;
     if (city === 'Москва+обл.') {
       await ctx.reply('Выберите тип наполнителя:', Markup.keyboard(['Гранит', 'Гравий']).oneTime().resize());
       return ctx.wizard.next();
     } else {
       ctx.wizard.state.data.fillerType = 'Гранит';
-      return ctx.wizard.selectStep(3);
+      await ctx.reply('Введите марку материала (например, М300):');
+      return ctx.wizard.selectStep(4);
     }
   },
 
-  // 3. Выбор или установка наполнителя
+  // 3. Филлер (только для Москва+обл.)
   async (ctx) => {
     if (!ctx.wizard.state.data.fillerType) {
       const filler = ctx.message.text;
@@ -50,7 +54,7 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // 4. Марка
+  // 4. Марка материала
   async (ctx) => {
     ctx.wizard.state.data.materialGrade = ctx.message.text;
     await ctx.reply('Укажите объём в м³:', Markup.keyboard([['Помощь в расчёте']]).oneTime().resize());
@@ -63,7 +67,7 @@ const orderScene = new Scenes.WizardScene(
     if (text === 'Помощь в расчёте') {
       ctx.wizard.state.volumeCalc = {};
       await ctx.reply('Введите длину в метрах:');
-      return ctx.wizard.selectStep(14);
+      return ctx.wizard.selectStep(16);
     }
     const volume = parseFloat(text.replace(',', '.'));
     if (isNaN(volume)) return ctx.reply('Введите корректное число.');
@@ -137,7 +141,18 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // 13. Телефон
+  // 13. Способ оплаты  <--- ДОБАВЛЕН!
+  async (ctx) => {
+    const payment = ctx.message.text;
+    if (!['Наличный расчёт', 'Безналичный расчёт'].includes(payment)) {
+      return ctx.reply('Пожалуйста, выберите способ оплаты из списка.');
+    }
+    ctx.wizard.state.data.paymentMethod = payment;
+    await ctx.reply('Введите номер телефона (например, +7 999 123-45-67):');
+    return ctx.wizard.next();
+  },
+
+  // 14. Телефон
   async (ctx) => {
     const phone = ctx.message.text.trim();
     const phoneRegex = /^((\+7|8)[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/;
@@ -150,7 +165,7 @@ const orderScene = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // 14. Сохранение заявки (после комментария)
+  // 15. Сохранение заявки (после комментария)
   async (ctx) => {
     ctx.wizard.state.data.comment = ctx.message.text;
     ctx.wizard.state.data.telegramId = ctx.from.id;
@@ -162,14 +177,18 @@ const orderScene = new Scenes.WizardScene(
       console.error('❗ Ошибка при отправке клиенту:', err);
     }
 
+    // Отправка админу (проверь adminId)
     const adminId = 7811172186;
     const data = ctx.wizard.state.data;
-    await ctx.telegram.sendMessage(adminId, `📬 *Новая заявка:*\n🏙 *Город:* ${data.city}\n🧱 *Тип:* ${data.productType} (${data.fillerType})\n🏷 *Марка:* ${data.materialGrade}\n📦 *Объём:* ${data.volume} м³\n📍 *Адрес:* ${data.deliveryAddress}\n🕒 *Дата/время:* ${data.deliveryDateTime}\n🚚 *Подача:* ${data.deliveryMethod} (${data.pumpLength})\n👤 *Клиент:* ${data.customerType}, ${data.phoneNumber}\n🧾 *Оплата:* ${data.paymentMethod}\n💬 *Комментарий:* ${data.comment || '—'}`, { parse_mode: 'Markdown' });
+    await ctx.telegram.sendMessage(adminId,
+      `📬 *Новая заявка:*\n🏙 *Город:* ${data.city}\n🧱 *Тип:* ${data.productType} (${data.fillerType})\n🏷 *Марка:* ${data.materialGrade}\n📦 *Объём:* ${data.volume} м³\n📍 *Адрес:* ${data.deliveryAddress}\n🕒 *Дата/время:* ${data.deliveryDateTime}\n🚚 *Подача:* ${data.deliveryMethod} (${data.pumpLength})\n👤 *Клиент:* ${data.customerType}, ${data.phoneNumber}\n🧾 *Оплата:* ${data.paymentMethod}\n💬 *Комментарий:* ${data.comment || '—'}`,
+      { parse_mode: 'Markdown' }
+    );
 
     return ctx.scene.leave();
   },
 
-  // 15–17. Расчёт объёма
+  // 16–19. Расчёт объёма (длина-ширина-высота)
   async (ctx) => {
     const length = parseFloat(ctx.message.text.replace(',', '.'));
     if (isNaN(length)) return ctx.reply('Введите длину в метрах.');
