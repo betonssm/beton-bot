@@ -178,7 +178,7 @@ const orderScene = new Scenes.WizardScene(
     }
 
     // Отправка админу (проверь adminId)
-    const adminId = 7811172186;
+    const adminId = -1002532193670;
     const data = ctx.wizard.state.data;
     await ctx.telegram.sendMessage(adminId,
       `📬 *Новая заявка:*\n🏙 *Город:* ${data.city}\n🧱 *Тип:* ${data.productType} (${data.fillerType})\n🏷 *Марка:* ${data.materialGrade}\n📦 *Объём:* ${data.volume} м³\n📍 *Адрес:* ${data.deliveryAddress}\n🕒 *Дата/время:* ${data.deliveryDateTime}\n🚚 *Подача:* ${data.deliveryMethod} (${data.pumpLength})\n👤 *Клиент:* ${data.customerType}, ${data.phoneNumber}\n🧾 *Оплата:* ${data.paymentMethod}\n💬 *Комментарий:* ${data.comment || '—'}`,
