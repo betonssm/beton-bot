@@ -2,6 +2,11 @@ const express = require('express');
 const { Telegraf, Scenes, session } = require('telegraf');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const { OpenAI } = require('openai');
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 
 // Подключение к MongoDB
@@ -43,9 +48,40 @@ bot.start((ctx) =>
 // Обработка кнопок
 bot.hears('📝 Оставить заявку', (ctx) => ctx.scene.enter('order-wizard'));
 
-bot.hears('🤖 Получить консультацию ИИ', (ctx) =>
-  ctx.reply('💬 Задайте свой вопрос по бетону или строительству, и наш ИИ-ассистент постарается помочь! (Функционал скоро появится)')
-);
+
+bot.hears('🤖 Получить консультацию ИИ', (ctx) => {
+  ctx.session.waitingAiQuestion = true;
+  ctx.reply('💬 Напишите ваш вопрос по бетону или строительству:');
+});
+
+// Далее ловим следующее сообщение пользователя:
+bot.on('text', async (ctx, next) => {
+  if (ctx.session.waitingAiQuestion) {
+    ctx.session.waitingAiQuestion = false;
+    const userQuestion = ctx.message.text;
+    await ctx.reply('⏳ Запрос отправлен ИИ, ждите ответ...');
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo", // или "gpt-4", если есть доступ
+        messages: [
+          { role: "system", content: "Ты — профессиональный строительный консультант по товарному бетону, помогаешь выбрать марку и ответить на вопросы клиента." },
+          { role: "user", content: userQuestion }
+        ],
+        max_tokens: 700,
+        temperature: 0.5,
+      });
+      const answer = completion.choices[0]?.message?.content || "Извините, не удалось получить ответ от ИИ.";
+      await ctx.reply('🤖 Ответ ИИ:\n' + answer);
+    } catch (e) {
+      console.error(e);
+      await ctx.reply('❗ Ошибка обращения к ИИ, попробуйте позже.');
+    }
+  } else {
+    // Другие текстовые сообщения
+    return next();
+  }
+});
 // 💡 Express-сервер
 const app = express();
 app.use(express.json());
