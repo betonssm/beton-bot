@@ -1,6 +1,17 @@
 const express = require('express');
 const { Telegraf, Scenes, session } = require('telegraf');
+const mongoose = require('mongoose');
 require('dotenv').config();
+
+// Подключение к MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+  console.log('✅ Подключено к MongoDB!');
+}).catch((err) => {
+  console.error('❌ Ошибка подключения к MongoDB:', err);
+});
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
