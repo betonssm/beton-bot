@@ -163,7 +163,7 @@ const orderScene = new Scenes.WizardScene(
     ctx.wizard.state.data.phoneNumber = phone;
     await ctx.reply('Добавьте комментарий или напишите "нет":');
     return ctx.wizard.next();
-  },
+},
 
   // 15. Сохранение заявки (после комментария)
   async (ctx) => {
